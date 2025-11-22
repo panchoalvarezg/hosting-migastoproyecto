@@ -6,7 +6,13 @@ const API_URL = "http://localhost:4000";
 // Layout general con el menú
 function Layout({ children }) {
   return (
-    <div style={{ minHeight: "100vh", backgroundColor: "#242424", color: "#f5f5f5" }}>
+    <div
+      style={{
+        minHeight: "100vh",
+        backgroundColor: "#242424",
+        color: "#f5f5f5",
+      }}
+    >
       <header
         style={{
           backgroundColor: "#111827",
@@ -45,7 +51,180 @@ function LoginPage() {
 }
 
 function DashboardPage() {
-  return <h2 style={{ fontSize: "20px", fontWeight: 600 }}>Dashboard</h2>;
+  const [movimientos, setMovimientos] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const fetchMovimientos = async () => {
+    try {
+      setLoading(true);
+      setError("");
+      const res = await fetch(`${API_URL}/movimientos`);
+      const data = await res.json();
+      setMovimientos(data);
+    } catch (err) {
+      console.error(err);
+      setError("Error al cargar los movimientos");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchMovimientos();
+  }, []);
+
+  // Cálculos básicos
+  const totalGastos = movimientos
+    .filter((m) => m.tipo === "gasto")
+    .reduce((acc, m) => acc + Number(m.monto || 0), 0);
+
+  const totalIngresos = movimientos
+    .filter((m) => m.tipo === "ingreso")
+    .reduce((acc, m) => acc + Number(m.monto || 0), 0);
+
+  const saldo = totalIngresos - totalGastos;
+
+  // Gasto por categoría (solo gastos)
+  const gastosPorCategoria = movimientos
+    .filter((m) => m.tipo === "gasto")
+    .reduce((acc, m) => {
+      const cat = m.categoria || "Sin categoría";
+      acc[cat] = (acc[cat] || 0) + Number(m.monto || 0);
+      return acc;
+    }, {});
+
+  const categoriasOrdenadas = Object.entries(gastosPorCategoria).sort(
+    (a, b) => b[1] - a[1]
+  );
+
+  return (
+    <div>
+      <h2 style={{ fontSize: "20px", fontWeight: 600, marginBottom: "16px" }}>
+        Dashboard
+      </h2>
+
+      {error && (
+        <p style={{ color: "#f87171", fontSize: "14px", marginBottom: "8px" }}>
+          {error}
+        </p>
+      )}
+
+      {/* Cards de resumen */}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+          gap: "12px",
+          marginBottom: "24px",
+        }}
+      >
+        <div
+          style={{
+            padding: "12px 14px",
+            backgroundColor: "#111827",
+            borderRadius: "8px",
+          }}
+        >
+          <p style={{ fontSize: "12px", opacity: 0.8 }}>Ingresos totales</p>
+          <p style={{ fontSize: "20px", fontWeight: 600 }}>
+            ${totalIngresos.toLocaleString("es-CL")}
+          </p>
+        </div>
+
+        <div
+          style={{
+            padding: "12px 14px",
+            backgroundColor: "#111827",
+            borderRadius: "8px",
+          }}
+        >
+          <p style={{ fontSize: "12px", opacity: 0.8 }}>Gastos totales</p>
+          <p style={{ fontSize: "20px", fontWeight: 600 }}>
+            ${totalGastos.toLocaleString("es-CL")}
+          </p>
+        </div>
+
+        <div
+          style={{
+            padding: "12px 14px",
+            backgroundColor: saldo >= 0 ? "#065f46" : "#7f1d1d",
+            borderRadius: "8px",
+          }}
+        >
+          <p style={{ fontSize: "12px", opacity: 0.9 }}>Saldo del período</p>
+          <p style={{ fontSize: "20px", fontWeight: 600 }}>
+            ${saldo.toLocaleString("es-CL")}
+          </p>
+        </div>
+      </div>
+
+      {loading ? (
+        <p>Cargando datos...</p>
+      ) : movimientos.length === 0 ? (
+        <p>Aún no tienes movimientos registrados.</p>
+      ) : (
+        <>
+          <h3
+            style={{
+              fontSize: "16px",
+              fontWeight: 500,
+              marginBottom: "8px",
+              marginTop: "8px",
+            }}
+          >
+            Gasto por categoría
+          </h3>
+          {categoriasOrdenadas.length === 0 ? (
+            <p style={{ fontSize: "14px" }}>
+              Aún no registras gastos, solo ingresos.
+            </p>
+          ) : (
+            <table
+              style={{
+                width: "100%",
+                borderCollapse: "collapse",
+                fontSize: "14px",
+              }}
+            >
+              <thead>
+                <tr>
+                  <th
+                    style={{
+                      textAlign: "left",
+                      paddingBottom: "6px",
+                      borderBottom: "1px solid #374151",
+                    }}
+                  >
+                    Categoría
+                  </th>
+                  <th
+                    style={{
+                      textAlign: "right",
+                      paddingBottom: "6px",
+                      borderBottom: "1px solid #374151",
+                    }}
+                  >
+                    Total gastado
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {categoriasOrdenadas.map(([cat, monto]) => (
+                  <tr key={cat}>
+                    <td style={{ padding: "4px 0" }}>{cat}</td>
+                    <td style={{ padding: "4px 0", textAlign: "right" }}>
+                      ${monto.toLocaleString("es-CL")}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </>
+      )}
+    </div>
+  );
 }
 
 function MetasPage() {
@@ -250,9 +429,15 @@ function MovimientosPage() {
             <tr>
               <th style={{ textAlign: "left", paddingBottom: "8px" }}>Fecha</th>
               <th style={{ textAlign: "left", paddingBottom: "8px" }}>Tipo</th>
-              <th style={{ textAlign: "left", paddingBottom: "8px" }}>Categoría</th>
-              <th style={{ textAlign: "right", paddingBottom: "8px" }}>Monto</th>
-              <th style={{ textAlign: "left", paddingBottom: "8px" }}>Descripción</th>
+              <th style={{ textAlign: "left", paddingBottom: "8px" }}>
+                Categoría
+              </th>
+              <th style={{ textAlign: "right", paddingBottom: "8px" }}>
+                Monto
+              </th>
+              <th style={{ textAlign: "left", paddingBottom: "8px" }}>
+                Descripción
+              </th>
               <th></th>
             </tr>
           </thead>
