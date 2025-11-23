@@ -164,6 +164,37 @@ app.delete("/metas/:id", (req, res) => {
   res.status(204).send();
 });
 
+// ---------------- API EXTERNA: Divisas ----------------
+
+import fetch from "node-fetch";
+
+// Usaremos una API gratuita rápida
+// Ejemplo: https://api.exchangerate-api.com/v4/latest/USD
+
+app.get("/divisas", async (req, res) => {
+  try {
+    const respuesta = await fetch("https://open.er-api.com/v6/latest/USD");
+    const data = await respuesta.json();
+
+    // Queremos USD y EUR en CLP
+    const usdToClp = data.rates.CLP;
+    const eurToClp = data.rates.CLP / data.rates.EUR;
+
+    res.json({
+      base: "USD",
+      usd_clp: usdToClp,
+      eur_clp: eurToClp,
+    });
+  } catch (err) {
+    console.error("Error API externa:", err);
+    res.status(500).json({ error: "No se pudo obtener tasas de cambio" });
+  }
+});
+
+
+
+
+
 // ---------------- Endpoint de salud ----------------
 app.get("/health", (req, res) => {
   res.json({ status: "ok", message: "Backend MiGasto funcionando" });

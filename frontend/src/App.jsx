@@ -55,29 +55,36 @@ function DashboardPage() {
   const [metas, setMetas] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [divisas, setDivisas] = useState(null);
+
 
   // Traer movimientos y metas al mismo tiempo
   const fetchData = async () => {
-    try {
-      setLoading(true);
-      setError("");
-      const [resMovs, resMetas] = await Promise.all([
-        fetch(`${API_URL}/movimientos`),
-        fetch(`${API_URL}/metas`),
-      ]);
+  try {
+    setLoading(true);
+    setError("");
 
-      const dataMovs = await resMovs.json();
-      const dataMetas = await resMetas.json();
+    const [resMovs, resMetas, resDivisas] = await Promise.all([
+      fetch(`${API_URL}/movimientos`),
+      fetch(`${API_URL}/metas`),
+      fetch(`${API_URL}/divisas`),
+    ]);
 
-      setMovimientos(dataMovs);
-      setMetas(dataMetas);
-    } catch (err) {
-      console.error(err);
-      setError("Error al cargar los datos del dashboard");
-    } finally {
-      setLoading(false);
-    }
-  };
+    const dataMovs = await resMovs.json();
+    const dataMetas = await resMetas.json();
+    const dataDivisas = await resDivisas.json();
+
+    setMovimientos(dataMovs);
+    setMetas(dataMetas);
+    setDivisas(dataDivisas);
+  } catch (err) {
+    console.error(err);
+    setError("Error al cargar los datos del dashboard");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   useEffect(() => {
     fetchData();
@@ -144,257 +151,279 @@ function DashboardPage() {
   const topMetas = metasOrdenadas.slice(0, 3);
 
   return (
-    <div>
-      <h2 style={{ fontSize: "20px", fontWeight: 600, marginBottom: "16px" }}>
-        Dashboard
-      </h2>
+  <div>
+    <h2 style={{ fontSize: "20px", fontWeight: 600, marginBottom: "16px" }}>
+      Dashboard
+    </h2>
 
-      {error && (
-        <p style={{ color: "#f87171", fontSize: "14px", marginBottom: "8px" }}>
-          {error}
-        </p>
-      )}
+    {error && (
+      <p style={{ color: "#f87171", fontSize: "14px", marginBottom: "8px" }}>
+        {error}
+      </p>
+    )}
 
-      {/* Cards de resumen dinero + metas */}
+    {/* Cards de resumen */}
+    <div
+      style={{
+        display: "grid",
+        gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+        gap: "12px",
+        marginBottom: "24px",
+      }}
+    >
+      {/* Dinero */}
       <div
         style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-          gap: "12px",
-          marginBottom: "24px",
+          padding: "12px 14px",
+          backgroundColor: "#111827",
+          borderRadius: "8px",
         }}
       >
-        {/* Dinero */}
-        <div
-          style={{
-            padding: "12px 14px",
-            backgroundColor: "#111827",
-            borderRadius: "8px",
-          }}
-        >
-          <p style={{ fontSize: "12px", opacity: 0.8 }}>Ingresos totales</p>
-          <p style={{ fontSize: "20px", fontWeight: 600 }}>
-            ${totalIngresos.toLocaleString("es-CL")}
-          </p>
-        </div>
-
-        <div
-          style={{
-            padding: "12px 14px",
-            backgroundColor: "#111827",
-            borderRadius: "8px",
-          }}
-        >
-          <p style={{ fontSize: "12px", opacity: 0.8 }}>Gastos totales</p>
-          <p style={{ fontSize: "20px", fontWeight: 600 }}>
-            ${totalGastos.toLocaleString("es-CL")}
-          </p>
-        </div>
-
-        <div
-          style={{
-            padding: "12px 14px",
-            backgroundColor: saldo >= 0 ? "#065f46" : "#7f1d1d",
-            borderRadius: "8px",
-          }}
-        >
-          <p style={{ fontSize: "12px", opacity: 0.9 }}>Saldo del período</p>
-          <p style={{ fontSize: "20px", fontWeight: 600 }}>
-            ${saldo.toLocaleString("es-CL")}
-          </p>
-        </div>
-
-        {/* Metas */}
-        <div
-          style={{
-            padding: "12px 14px",
-            backgroundColor: "#111827",
-            borderRadius: "8px",
-          }}
-        >
-          <p style={{ fontSize: "12px", opacity: 0.8 }}>Metas creadas</p>
-          <p style={{ fontSize: "20px", fontWeight: 600 }}>{totalMetas}</p>
-        </div>
-
-        <div
-          style={{
-            padding: "12px 14px",
-            backgroundColor: "#111827",
-            borderRadius: "8px",
-          }}
-        >
-          <p style={{ fontSize: "12px", opacity: 0.8 }}>Metas completadas</p>
-          <p style={{ fontSize: "20px", fontWeight: 600 }}>
-            {metasCompletadas} / {totalMetas}
-          </p>
-        </div>
-
-        <div
-          style={{
-            padding: "12px 14px",
-            backgroundColor: "#1f2937",
-            borderRadius: "8px",
-          }}
-        >
-          <p style={{ fontSize: "12px", opacity: 0.8 }}>
-            Avance global de metas
-          </p>
-          <p style={{ fontSize: "20px", fontWeight: 600 }}>
-            {porcentajeGlobalMetas}%
-          </p>
-        </div>
+        <p style={{ fontSize: "12px", opacity: 0.8 }}>Ingresos totales</p>
+        <p style={{ fontSize: "20px", fontWeight: 600 }}>
+          ${totalIngresos.toLocaleString("es-CL")}
+        </p>
       </div>
 
-      {loading ? (
-        <p>Cargando datos...</p>
-      ) : (
-        <>
-          {/* Gasto por categoría */}
-          <h3
+      <div
+        style={{
+          padding: "12px 14px",
+          backgroundColor: "#111827",
+          borderRadius: "8px",
+        }}
+      >
+        <p style={{ fontSize: "12px", opacity: 0.8 }}>Gastos totales</p>
+        <p style={{ fontSize: "20px", fontWeight: 600 }}>
+          ${totalGastos.toLocaleString("es-CL")}
+        </p>
+      </div>
+
+      <div
+        style={{
+          padding: "12px 14px",
+          backgroundColor: saldo >= 0 ? "#065f46" : "#7f1d1d",
+          borderRadius: "8px",
+        }}
+      >
+        <p style={{ fontSize: "12px", opacity: 0.9 }}>Saldo del período</p>
+        <p style={{ fontSize: "20px", fontWeight: 600 }}>
+          ${saldo.toLocaleString("es-CL")}
+        </p>
+      </div>
+
+      {/* Metas */}
+      <div
+        style={{
+          padding: "12px 14px",
+          backgroundColor: "#111827",
+          borderRadius: "8px",
+        }}
+      >
+        <p style={{ fontSize: "12px", opacity: 0.8 }}>Metas creadas</p>
+        <p style={{ fontSize: "20px", fontWeight: 600 }}>{totalMetas}</p>
+      </div>
+
+      <div
+        style={{
+          padding: "12px 14px",
+          backgroundColor: "#111827",
+          borderRadius: "8px",
+        }}
+      >
+        <p style={{ fontSize: "12px", opacity: 0.8 }}>Metas completadas</p>
+        <p style={{ fontSize: "20px", fontWeight: 600 }}>
+          {metasCompletadas} / {totalMetas}
+        </p>
+      </div>
+
+      <div
+        style={{
+          padding: "12px 14px",
+          backgroundColor: "#1f2937",
+          borderRadius: "8px",
+        }}
+      >
+        <p style={{ fontSize: "12px", opacity: 0.8 }}>
+          Avance global de metas
+        </p>
+        <p style={{ fontSize: "20px", fontWeight: 600 }}>
+          {porcentajeGlobalMetas}%
+        </p>
+      </div>
+    </div>
+
+    {/* Divisas*/}
+    {divisas && (
+      <div
+        style={{
+          padding: "12px 14px",
+          backgroundColor: "#111827",
+          borderRadius: "8px",
+          marginBottom: "16px",
+        }}
+      >
+        <p style={{ fontSize: "12px", opacity: 0.8 }}>Tipo de cambio actual</p>
+        <p style={{ fontSize: "14px", marginTop: "6px" }}>
+          <strong>1 USD</strong> ={" "}
+          {divisas.usd_clp.toLocaleString("es-CL")} CLP
+        </p>
+        <p style={{ fontSize: "14px", marginTop: "4px" }}>
+          <strong>1 EUR</strong> ={" "}
+          {divisas.eur_clp.toLocaleString("es-CL")} CLP
+        </p>
+      </div>
+    )}
+
+    {loading ? (
+      <p>Cargando datos...</p>
+    ) : (
+      <>
+        {/* Gasto por categoría */}
+        <h3
+          style={{
+            fontSize: "16px",
+            fontWeight: 500,
+            marginBottom: "8px",
+            marginTop: "8px",
+          }}
+        >
+          Gasto por categoría
+        </h3>
+
+        {movimientos.length === 0 ? (
+          <p style={{ fontSize: "14px" }}>
+            Aún no tienes movimientos registrados.
+          </p>
+        ) : categoriasOrdenadas.length === 0 ? (
+          <p style={{ fontSize: "14px" }}>
+            No hay gastos registrados, solo ingresos.
+          </p>
+        ) : (
+          <table
             style={{
-              fontSize: "16px",
-              fontWeight: 500,
-              marginBottom: "8px",
-              marginTop: "8px",
+              width: "100%",
+              borderCollapse: "collapse",
+              fontSize: "14px",
+              marginBottom: "16px",
             }}
           >
-            Gasto por categoría
-          </h3>
-
-          {movimientos.length === 0 ? (
-            <p style={{ fontSize: "14px" }}>
-              Aún no tienes movimientos registrados.
-            </p>
-          ) : categoriasOrdenadas.length === 0 ? (
-            <p style={{ fontSize: "14px" }}>
-              No hay gastos registrados, solo ingresos.
-            </p>
-          ) : (
-            <table
-              style={{
-                width: "100%",
-                borderCollapse: "collapse",
-                fontSize: "14px",
-                marginBottom: "16px",
-              }}
-            >
-              <thead>
-                <tr>
-                  <th
-                    style={{
-                      textAlign: "left",
-                      paddingBottom: "6px",
-                      borderBottom: "1px solid #374151",
-                    }}
-                  >
-                    Categoría
-                  </th>
-                  <th
-                    style={{
-                      textAlign: "right",
-                      paddingBottom: "6px",
-                      borderBottom: "1px solid #374151",
-                    }}
-                  >
-                    Total gastado
-                  </th>
+            <thead>
+              <tr>
+                <th
+                  style={{
+                    textAlign: "left",
+                    paddingBottom: "6px",
+                    borderBottom: "1px solid #374151",
+                  }}
+                >
+                  Categoría
+                </th>
+                <th
+                  style={{
+                    textAlign: "right",
+                    paddingBottom: "6px",
+                    borderBottom: "1px solid #374151",
+                  }}
+                >
+                  Total gastado
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {categoriasOrdenadas.map(([cat, monto]) => (
+                <tr key={cat}>
+                  <td style={{ padding: "4px 0" }}>{cat}</td>
+                  <td style={{ padding: "4px 0", textAlign: "right" }}>
+                    ${monto.toLocaleString("es-CL")}
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {categoriasOrdenadas.map(([cat, monto]) => (
-                  <tr key={cat}>
-                    <td style={{ padding: "4px 0" }}>{cat}</td>
+              ))}
+            </tbody>
+          </table>
+        )}
+
+        {/* Resumen de metas */}
+        <h3
+          style={{
+            fontSize: "16px",
+            fontWeight: 500,
+            marginBottom: "8px",
+            marginTop: "8px",
+          }}
+        >
+          Metas más avanzadas
+        </h3>
+
+        {metas.length === 0 ? (
+          <p style={{ fontSize: "14px" }}>
+            Aún no tienes metas creadas. Puedes crearlas en la pestaña "Metas".
+          </p>
+        ) : topMetas.length === 0 ? (
+          <p style={{ fontSize: "14px" }}>
+            Todavía no hay progreso registrado en tus metas.
+          </p>
+        ) : (
+          <table
+            style={{
+              width: "100%",
+              borderCollapse: "collapse",
+              fontSize: "14px",
+            }}
+          >
+            <thead>
+              <tr>
+                <th
+                  style={{
+                    textAlign: "left",
+                    paddingBottom: "6px",
+                    borderBottom: "1px solid #374151",
+                  }}
+                >
+                  Meta
+                </th>
+                <th
+                  style={{
+                    textAlign: "right",
+                    paddingBottom: "6px",
+                    borderBottom: "1px solid #374151",
+                  }}
+                >
+                  Progreso
+                </th>
+                <th
+                  style={{
+                    textAlign: "right",
+                    paddingBottom: "6px",
+                    borderBottom: "1px solid #374151",
+                  }}
+                >
+                  Falta por ahorrar
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {topMetas.map((m) => {
+                const restante = Math.max(0, m.montoObjetivo - m.montoActual);
+                return (
+                  <tr key={m.id}>
+                    <td style={{ padding: "4px 0" }}>{m.nombre}</td>
                     <td style={{ padding: "4px 0", textAlign: "right" }}>
-                      ${monto.toLocaleString("es-CL")}
+                      {m.progreso}%
+                    </td>
+                    <td style={{ padding: "4px 0", textAlign: "right" }}>
+                      ${restante.toLocaleString("es-CL")}
                     </td>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
+                );
+              })}
+            </tbody>
+          </table>
+        )}
+      </>
+    )}
+  </div>
+);
 
-          {/* Resumen de metas */}
-          <h3
-            style={{
-              fontSize: "16px",
-              fontWeight: 500,
-              marginBottom: "8px",
-              marginTop: "8px",
-            }}
-          >
-            Metas más avanzadas
-          </h3>
-
-          {metas.length === 0 ? (
-            <p style={{ fontSize: "14px" }}>
-              Aún no tienes metas creadas. Puedes crearlas en la pestaña
-              "Metas".
-            </p>
-          ) : topMetas.length === 0 ? (
-            <p style={{ fontSize: "14px" }}>
-              Todavía no hay progreso registrado en tus metas.
-            </p>
-          ) : (
-            <table
-              style={{
-                width: "100%",
-                borderCollapse: "collapse",
-                fontSize: "14px",
-              }}
-            >
-              <thead>
-                <tr>
-                  <th
-                    style={{
-                      textAlign: "left",
-                      paddingBottom: "6px",
-                      borderBottom: "1px solid #374151",
-                    }}
-                  >
-                    Meta
-                  </th>
-                  <th
-                    style={{
-                      textAlign: "right",
-                      paddingBottom: "6px",
-                      borderBottom: "1px solid #374151",
-                    }}
-                  >
-                    Progreso
-                  </th>
-                  <th
-                    style={{
-                      textAlign: "right",
-                      paddingBottom: "6px",
-                      borderBottom: "1px solid #374151",
-                    }}
-                  >
-                    Falta por ahorrar
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {topMetas.map((m) => {
-                  const restante = Math.max(0, m.montoObjetivo - m.montoActual);
-                  return (
-                    <tr key={m.id}>
-                      <td style={{ padding: "4px 0" }}>{m.nombre}</td>
-                      <td style={{ padding: "4px 0", textAlign: "right" }}>
-                        {m.progreso}%
-                      </td>
-                      <td style={{ padding: "4px 0", textAlign: "right" }}>
-                        ${restante.toLocaleString("es-CL")}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          )}
-        </>
-      )}
-    </div>
-  );
 }
 
 function MetasPage() {
