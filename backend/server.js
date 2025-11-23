@@ -87,6 +87,82 @@ app.delete("/movimientos/:id", (req, res) => {
   movimientos = movimientos.filter((m) => m.id !== id);
   res.status(204).send(); // sin body
 });
+// ---------------- Metas (por ahora en memoria) ----------------
+
+let metas = [];
+let nextMetaId = 1;
+
+// GET /metas -> lista todas las metas
+app.get("/metas", (req, res) => {
+  res.json(metas);
+});
+
+// POST /metas -> crea una nueva meta
+app.post("/metas", (req, res) => {
+  const { nombre, montoObjetivo, montoActual, fechaLimite, descripcion } =
+    req.body;
+
+  if (!nombre || !montoObjetivo) {
+    return res
+      .status(400)
+      .json({ error: "nombre y montoObjetivo son obligatorios" });
+  }
+
+  const nuevaMeta = {
+    id: nextMetaId++,
+    nombre,
+    montoObjetivo: Number(montoObjetivo),
+    montoActual: montoActual ? Number(montoActual) : 0,
+    fechaLimite: fechaLimite || "",
+    descripcion: descripcion || "",
+  };
+
+  metas.push(nuevaMeta);
+  res.status(201).json(nuevaMeta);
+});
+
+// PUT /metas/:id -> actualiza datos de una meta
+app.put("/metas/:id", (req, res) => {
+  const id = Number(req.params.id);
+  const index = metas.findIndex((m) => m.id === id);
+
+  if (index === -1) {
+    return res.status(404).json({ error: "Meta no encontrada" });
+  }
+
+  const { nombre, montoObjetivo, montoActual, fechaLimite, descripcion } =
+    req.body;
+
+  metas[index] = {
+    ...metas[index],
+    nombre: nombre ?? metas[index].nombre,
+    montoObjetivo:
+      montoObjetivo !== undefined
+        ? Number(montoObjetivo)
+        : metas[index].montoObjetivo,
+    montoActual:
+      montoActual !== undefined
+        ? Number(montoActual)
+        : metas[index].montoActual,
+    fechaLimite: fechaLimite ?? metas[index].fechaLimite,
+    descripcion: descripcion ?? metas[index].descripcion,
+  };
+
+  res.json(metas[index]);
+});
+
+// DELETE /metas/:id -> elimina una meta
+app.delete("/metas/:id", (req, res) => {
+  const id = Number(req.params.id);
+  const existe = metas.some((m) => m.id === id);
+
+  if (!existe) {
+    return res.status(404).json({ error: "Meta no encontrada" });
+  }
+
+  metas = metas.filter((m) => m.id !== id);
+  res.status(204).send();
+});
 
 // ---------------- Endpoint de salud ----------------
 app.get("/health", (req, res) => {
