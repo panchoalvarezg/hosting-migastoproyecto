@@ -1080,32 +1080,33 @@ function MovimientosPage() {
 
   // Traer movimientos al cargar la página
   const fetchMovimientos = async () => {
-  try {
-    setLoading(true);
-    setError("");
-    const token = localStorage.getItem("token");
-    if (!token) {
-      setError("Debes iniciar sesión para ver tus movimientos");
-      setMovimientos([]);
-      return;
+    try {
+      setLoading(true);
+      setError("");
+
+      const token = localStorage.getItem("token");
+      if (!token) {
+        setError("Debes iniciar sesión para ver tus movimientos");
+        setMovimientos([]);
+        return;
+      }
+
+      const res = await fetch(`${API_URL}/movimientos`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await res.json();
+      setMovimientos(data);
+
+    } catch (err) {
+      console.error(err);
+      setError("Error al cargar movimientos");
+    } finally {
+      setLoading(false);
     }
-
-    const res = await fetch(`${API_URL}/movimientos`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    const data = await res.json();
-    setMovimientos(data);
-  } catch (err) {
-    console.error(err);
-    setError("Error al cargar movimientos");
-  } finally {
-    setLoading(false);
-  }
-};
-
+  };
 
   useEffect(() => {
     fetchMovimientos();
@@ -1117,8 +1118,7 @@ function MovimientosPage() {
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Enviar nuevo movimiento al backend
-
+  // Crear nuevo movimiento
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -1141,9 +1141,7 @@ function MovimientosPage() {
 
       if (!res.ok) {
         if (res.status === 401) {
-          throw new Error(
-            "Sesión expirada o no autorizada. Inicia sesión de nuevo."
-          );
+          throw new Error("Sesión expirada o no autorizada. Inicia sesión de nuevo.");
         }
         throw new Error("Error al crear movimiento");
       }
@@ -1151,7 +1149,7 @@ function MovimientosPage() {
       const nuevo = await res.json();
       setMovimientos((prev) => [...prev, nuevo]);
 
-      // Limpiar formulario
+      // reset form
       setForm({
         tipo: "gasto",
         categoria: "",
@@ -1159,6 +1157,7 @@ function MovimientosPage() {
         fecha: "",
         descripcion: "",
       });
+
     } catch (err) {
       console.error(err);
       setError(err.message || "No se pudo guardar el movimiento");
@@ -1166,7 +1165,6 @@ function MovimientosPage() {
   };
 
   // Borrar movimiento
-
   const handleDelete = async (id) => {
     try {
       const token = localStorage.getItem("token");
@@ -1184,20 +1182,20 @@ function MovimientosPage() {
 
       if (!res.ok && res.status !== 204) {
         if (res.status === 401) {
-          throw new Error(
-            "Sesión expirada o no autorizada. Inicia sesión de nuevo."
-          );
+          throw new Error("Sesión expirada o no autorizada. Inicia sesión de nuevo.");
         }
         throw new Error("Error al eliminar movimiento");
       }
 
       setMovimientos((prev) => prev.filter((m) => m.id !== id));
+
     } catch (err) {
       console.error(err);
       setError(err.message || "No se pudo eliminar el movimiento");
     }
   };
-}
+
+  // --- RETURN DE LA PÁGINA ---
   return (
     <div>
       <h2 style={{ fontSize: "20px", fontWeight: 600, marginBottom: "16px" }}>
@@ -1230,6 +1228,7 @@ function MovimientosPage() {
             <option value="gasto">Gasto</option>
             <option value="ingreso">Ingreso</option>
           </select>
+
           <input
             name="categoria"
             placeholder="Categoría (ej: Comida)"
@@ -1248,6 +1247,7 @@ function MovimientosPage() {
             onChange={handleChange}
             style={{ flex: 1, padding: "6px 8px" }}
           />
+
           <input
             type="date"
             name="fecha"
@@ -1313,6 +1313,7 @@ function MovimientosPage() {
               <th></th>
             </tr>
           </thead>
+
           <tbody>
             {movimientos.map((m) => (
               <tr key={m.id}>
@@ -1323,6 +1324,7 @@ function MovimientosPage() {
                   ${m.monto}
                 </td>
                 <td style={{ padding: "4px 0" }}>{m.descripcion}</td>
+
                 <td style={{ padding: "4px 0" }}>
                   <button
                     onClick={() => handleDelete(m.id)}
@@ -1339,9 +1341,11 @@ function MovimientosPage() {
                     Eliminar
                   </button>
                 </td>
+
               </tr>
             ))}
           </tbody>
+
         </table>
       )}
     </div>
