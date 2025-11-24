@@ -219,9 +219,11 @@ return (
     {/* ------ Google Sign-In Button ------ */}
     <div id="googleSignInDiv"></div>
   </div>
-);
-
-
+  );
+}   
+// -------------------------------------------------------
+// DashboardPage COMIENZA AQUÍ (fuera de LoginPage)
+// -------------------------------------------------------
 function DashboardPage() {
   const [movimientos, setMovimientos] = useState([]);
   const [metas, setMetas] = useState([]);
